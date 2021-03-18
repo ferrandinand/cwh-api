@@ -2,8 +2,6 @@ package domain
 
 import "github.com/ferrandinand/cwh-api/dto"
 
-const WITHDRAWAL = "withdrawal"
-
 type Environment struct {
 	EnvironmentId string `db:"environment_id"`
 	Name          string `db:"name"`
@@ -12,15 +10,8 @@ type Environment struct {
 	Attributes    string
 }
 
-func (t Environment) IsWithdrawal() bool {
-	if t.TransactionType == WITHDRAWAL {
-		return true
-	}
-	return false
-}
-
 func (t Environment) ToDto() dto.EnvironmentResponse {
-	return dto.TransactionResponse{
+	return dto.EnvironmentResponse{
 		EnvironmentId: t.EnvironmentId,
 		Name:          t.Name,
 		Project:       t.Project,

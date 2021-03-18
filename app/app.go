@@ -19,6 +19,8 @@ func sanityCheck() {
 	envProps := []string{
 		"SERVER_ADDRESS",
 		"SERVER_PORT",
+		"AUTH_ADDRESS",
+		"AUTH_PORT",
 		"DB_USER",
 		"DB_PASSWD",
 		"DB_ADDR",
@@ -39,12 +41,12 @@ func Start() {
 	router := mux.NewRouter()
 
 	//wiring
-	//ch := UserHandlers{service.NewUserService(domain.NewUserRepositoryStub())}
 	dbClient := getDbClient()
+	authClient := getAuthURL()
 	userRepositoryDb := domain.NewUserRepositoryDb(dbClient)
-	accountRepositoryDb := domain.NewAccountRepositoryDb(dbClient)
+	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient)
 	ch := UserHandlers{service.NewUserService(userRepositoryDb)}
-	ah := AccountHandler{service.NewAccountService(accountRepositoryDb)}
+	ah := ProjectHandler{service.NewProjectService(projectRepositoryDb)}
 
 	// define routes
 	router.
@@ -56,15 +58,23 @@ func Start() {
 		Methods(http.MethodGet).
 		Name("GetUser")
 	router.
-		HandleFunc("/users/{user_id:[0-9]+}/account", ah.NewAccount).
+		HandleFunc("/project/new", ah.NewProject).
 		Methods(http.MethodPost).
-		Name("NewAccount")
+		Name("NewProject")
 	router.
-		HandleFunc("/users/{user_id:[0-9]+}/account/{account_id:[0-9]+}", ah.MakeTransaction).
-		Methods(http.MethodPost).
-		Name("NewTransaction")
+		HandleFunc("/project/{project_id}", ah.GetProject).
+		Methods(http.MethodGet).
+		Name("GetProject")
+	router.
+		HandleFunc("/projects/", ah.GetAllProject).
+		Methods(http.MethodGet).
+		Name("GetAllProject")
+	//router.
+	//	HandleFunc("/users/{user_id:[0-9]+}/account/{account_id:[0-9]+}", ah.MakeTransaction).
+	//	Methods(http.MethodPost).
+	//	Name("NewTransaction")
 
-	am := AuthMiddleware{domain.NewAuthRepository()}
+	am := AuthMiddleware{domain.NewAuthRepository(authClient)}
 	router.Use(am.authorizationHandler())
 	// starting server
 	address := os.Getenv("SERVER_ADDRESS")
@@ -91,4 +101,12 @@ func getDbClient() *sqlx.DB {
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
 	return client
+}
+
+func getAuthURL() string {
+	authPort := os.Getenv("AUTH_PORT")
+	authURL := os.Getenv("AUTH_ADDRESS")
+
+	URL := fmt.Sprintf("%s:%s", authURL, authPort)
+	return URL
 }

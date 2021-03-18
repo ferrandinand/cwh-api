@@ -18,10 +18,10 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	users := make([]User, 0)
 
 	if status == "" {
-		findAllSql := "select user_id, name, created_on, role, email, attributes, status from users"
+		findAllSql := "select user_id, name,created_on, role, email, attributes, status from users"
 		err = d.client.Select(&users, findAllSql)
 	} else {
-		findAllSql := "select user_id, name, created_on, role, email, attributes, status from users where status = ?"
+		findAllSql := "select user_id, name,created_on, role, email, attributes, status from users where status = ?"
 		err = d.client.Select(&users, findAllSql, status)
 	}
 
@@ -34,7 +34,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 }
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
-	userSql := "select user_id, name, created_on, role, email, attributes,status from users where user_id = ?"
+	userSql := "select user_id, name,created_on, role, email, attributes,status from users where user_id = ?"
 
 	var c User
 	err := d.client.Get(&c, userSql, id)

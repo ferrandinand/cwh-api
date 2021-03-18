@@ -8,25 +8,27 @@ import (
 
 //go:generate mockgen -destination=../mocks/service/mockProjectService.go -package=service github.com/ferrandinand/cwh-api/service ProjectService
 type ProjectService interface {
+	NewProject(request dto.NewProjectRequest) (*dto.ProjectResponse, *errs.AppError)
 	GetAllProject(string) ([]dto.ProjectResponse, *errs.AppError)
 	GetProject(string) (*dto.ProjectResponse, *errs.AppError)
-	GetAllEnvironment(string) ([]dto.ProjectResponse, *errs.AppError)
+	GetAllEnvironments(string) ([]dto.EnvironmentResponse, *errs.AppError)
 }
 
 type DefaultProjectService struct {
 	repo domain.ProjectRepository
 }
 
-func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.NewProjectResponse, *errs.AppError) {
+func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.ProjectResponse, *errs.AppError) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
-	project := domain.NewProject(name, user, group, repoURL)
-	if newProject, err := s.repo.Save(account); err != nil {
+	project := domain.NewProject(req.Name, req.CreatedBy, req.Group, req.RepoURL)
+	newProject, err := s.repo.Save(project)
+	if err != nil {
 		return nil, err
-	} else {
-		return newProject.ToNewProjectResponseDto(), nil
 	}
+	response := newProject.ToDto()
+	return &response, nil
 }
 
 func (s DefaultProjectService) GetAllProject(status string) ([]dto.ProjectResponse, *errs.AppError) {

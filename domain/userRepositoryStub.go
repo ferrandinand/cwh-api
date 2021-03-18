@@ -9,14 +9,18 @@ func (s UserRepositoryStub) FindAll() ([]User, error) {
 }
 
 func NewUserRepositoryStub() UserRepositoryStub {
+	jsonMock := map[string]interface{}{
+		"test": "1",
+	}
+
 	users := []User{
-		{1, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{2, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{3, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{4, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{5, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{6, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
-		{7, "Rob", "18/02/2019 11:15:45", "rob@test.com", "dfsdf,dsfds", "", 1},
+		{"1", "Rob", "123", "18/02/2019 11:15:45", "admin", "rob@test.com", jsonMock, "1"},
+		{"2", "Rob", "123", "18/02/2019 11:15:45", "user", "rob@test.com", jsonMock, "1"},
+		{"3", "Rob", "123", "18/02/2019 11:15:45", "admin", "rob@test.com", jsonMock, "1"},
+		{"4", "Rob", "123", "18/02/2019 11:15:45", "user", "rob@test.com", jsonMock, "1"},
+		{"5", "Rob", "123", "18/02/2019 11:15:45", "user", "rob@test.com", jsonMock, "1"},
+		{"6", "Rob", "123", "18/02/2019 11:15:45", "user", "rob@test.com", jsonMock, "1"},
+		{"7", "Rob", "123", "18/02/2019 11:15:45", "user", "rob@test.com", jsonMock, "1"},
 	}
 	return UserRepositoryStub{users}
 }
