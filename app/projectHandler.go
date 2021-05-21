@@ -13,16 +13,13 @@ type ProjectHandler struct {
 	service service.ProjectService
 }
 
-//name CreatedBy Group RepoURL
 func (h ProjectHandler) NewProject(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	projectName := vars["project_name"]
 	var request dto.NewProjectRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, err.Error())
 	} else {
-		request.Name = projectName
+		request.CreatedBy = r.Header.Get("User")
 		project, appError := h.service.NewProject(request)
 		if appError != nil {
 			writeResponse(w, appError.Code, appError.AsMessage())
@@ -47,11 +44,11 @@ func (h ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 func (h ProjectHandler) GetAllProject(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 
-	users, err := h.service.GetAllProject(status)
+	projects, err := h.service.GetAllProject(status)
 	if err != nil {
 		writeResponse(w, err.Code, err.AsMessage())
 	} else {
-		writeResponse(w, http.StatusOK, users)
+		writeResponse(w, http.StatusOK, projects)
 	}
 }
 

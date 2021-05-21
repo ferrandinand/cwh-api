@@ -6,31 +6,36 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ferrandinand/cwh-api/logger"
+	"github.com/ferrandinand/cwh-lib/logger"
 )
 
 type AuthRepository interface {
-	IsAuthorized(token string, routeName string, vars map[string]string) bool
+	IsAuthorized(token string, routeName string, vars map[string]string) (string, bool)
 }
 
 type RemoteAuthRepository struct {
 	URL string
 }
+type AuthReponse struct {
+	UserID       map[string]string
+	IsAuthorized map[string]bool
+}
 
-func (r RemoteAuthRepository) IsAuthorized(token string, routeName string, vars map[string]string) bool {
+func (r RemoteAuthRepository) IsAuthorized(token string, routeName string, vars map[string]string) (string, bool) {
 
 	u := buildVerifyURL(r.URL, token, routeName, vars)
 
 	if response, err := http.Get(u); err != nil {
 		fmt.Println("Error while sending..." + err.Error())
-		return false
+		return "", false
 	} else {
-		m := map[string]bool{}
+		m := AuthReponse{}
 		if err = json.NewDecoder(response.Body).Decode(&m); err != nil {
 			logger.Error("Error while decoding response from auth server:" + err.Error())
-			return false
+			return "", false
 		}
-		return m["isAuthorized"]
+		return m.UserID["user"], m.IsAuthorized["isAuthorized"]
+
 	}
 }
 
@@ -38,9 +43,7 @@ func (r RemoteAuthRepository) IsAuthorized(token string, routeName string, vars 
   This will generate a url for token verification in the below format
   /auth/verify?token={token string}
               &routeName={current route name}
-              &customer_id={customer id from the current route}
-              &account_id={account id from current route if available}
-  Sample: /auth/verify?token=aaaa.bbbb.cccc&routeName=MakeTransaction&customer_id=2000&account_id=95470
+  Sample: /auth/verify?token=aaaa.bbbb.cccc&routeName=MakeTransaction&user_id=2000
 */
 func buildVerifyURL(authURL string, token string, routeName string, vars map[string]string) string {
 	u := url.URL{Host: authURL, Path: "/auth/verify", Scheme: "http"}

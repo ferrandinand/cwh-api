@@ -2,9 +2,10 @@ package domain
 
 import (
 	"database/sql"
+	"encoding/json"
 
-	"github.com/ferrandinand/cwh-api/errs"
-	"github.com/ferrandinand/cwh-api/logger"
+	"github.com/ferrandinand/cwh-lib/errs"
+	"github.com/ferrandinand/cwh-lib/logger"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -18,10 +19,10 @@ func (d ProjectRepositoryDb) FindAll(status string) ([]Project, *errs.AppError) 
 	projects := make([]Project, 0)
 
 	if status == "" {
-		findAllSql := "select project_id, name, created_by, p.group, repo_url,p.attributes,activities,status from projects p"
+		findAllSql := "select project_id, name, created_by, p.group, p.attributes,activities,status from projects p"
 		err = d.client.Select(&projects, findAllSql)
 	} else {
-		findAllSql := "select project_id, name, created_by, p.group, repo_url,p.attributes,activities,status from projects p where status = ?"
+		findAllSql := "select project_id, name, created_by, p.group,p.attributes,activities,status from projects p where status = ?"
 		err = d.client.Select(&projects, findAllSql, status)
 	}
 
@@ -34,11 +35,23 @@ func (d ProjectRepositoryDb) FindAll(status string) ([]Project, *errs.AppError) 
 }
 
 func (d ProjectRepositoryDb) Save(p Project) (*Project, *errs.AppError) {
-	sqlInsert := "INSERT INTO projects (name, created_by, group, repo_url,attributes,activities,status) values (?, ?, ?, ?, ?, ?, ?)"
+	sqlInsert := "INSERT INTO projects (name, type, created_by, `group`, attributes,activities,status) values (?, ?, ?, ?, ?, ?, ?)"
 
-	_, err := d.client.Exec(sqlInsert, p.Name, p.CreatedBy, p.Group, p.RepoURL, p.Attributes, p.Activities, p.Status)
+	attributes_json, err := json.Marshal(p.Attributes)
 	if err != nil {
-		logger.Error("Error while creating new account: " + err.Error())
+		logger.Error("Error while creating new project: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected error from database")
+	}
+
+	activities_json, err := json.Marshal(p.Activities)
+	if err != nil {
+		logger.Error("Error while creating new project: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected error from database")
+	}
+
+	_, err = d.client.Exec(sqlInsert, p.Name, p.Type, p.CreatedBy, p.Group, attributes_json, activities_json, p.Status)
+	if err != nil {
+		logger.Error("Error while creating new project: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
 	}
 
@@ -46,7 +59,7 @@ func (d ProjectRepositoryDb) Save(p Project) (*Project, *errs.AppError) {
 }
 
 func (d ProjectRepositoryDb) ById(id string) (*Project, *errs.AppError) {
-	projectSql := "select p.project_id, p.name, p.created_by, p.group, p.repo_url,p.attributes,p.activities,p.status from projects p where project_id = ?"
+	projectSql := "select p.project_id, p.name, p.created_by, p.group, p.attributes,p.activities,p.status from projects p where project_id = ?"
 
 	var p Project
 	err := d.client.Get(&p, projectSql, id)

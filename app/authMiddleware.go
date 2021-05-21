@@ -1,11 +1,14 @@
 package app
 
 import (
-	"github.com/ferrandinand/cwh-api/domain"
-	"github.com/ferrandinand/cwh-api/errs"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
+
+	"github.com/ferrandinand/cwh-api/domain"
+
+	"github.com/ferrandinand/cwh-lib/errs"
+
+	"github.com/gorilla/mux"
 )
 
 type AuthMiddleware struct {
@@ -22,7 +25,9 @@ func (a AuthMiddleware) authorizationHandler() func(http.Handler) http.Handler {
 			if authHeader != "" {
 				token := getTokenFromHeader(authHeader)
 
-				isAuthorized := a.repo.IsAuthorized(token, currentRoute.GetName(), currentRouteVars)
+				user, isAuthorized := a.repo.IsAuthorized(token, currentRoute.GetName(), currentRouteVars)
+				//For each request add user id header
+				r.Header.Add("User", user)
 
 				if isAuthorized {
 					next.ServeHTTP(w, r)

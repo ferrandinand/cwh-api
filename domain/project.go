@@ -5,20 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/ferrandinand/cwh-api/dto"
-	"github.com/ferrandinand/cwh-api/errs"
+	"github.com/ferrandinand/cwh-lib/errs"
 )
-
-type JSONField map[string]interface{}
 
 type Project struct {
 	Id         string `db:"project_id"`
 	Name       string
+	Type       string
 	CreatedBy  string `db:"created_by"`
 	CreatedOn  string `db:"created_on"`
-	Group      string
-	RepoURL    string `db:"repo_url"`
+	Group      int
 	Attributes JSONField
 	Activities JSONField `db:"activities"`
 	Status     string
@@ -36,10 +35,10 @@ func (p Project) ToDto() dto.ProjectResponse {
 	return dto.ProjectResponse{
 		Id:         p.Id,
 		Name:       p.Name,
+		Type:       p.Type,
 		CreatedBy:  p.CreatedBy,
 		CreatedOn:  p.CreatedOn,
 		Group:      p.Group,
-		RepoURL:    p.RepoURL,
 		Attributes: p.Attributes,
 		Activities: p.Activities,
 		Status:     p.statusAsText(),
@@ -50,18 +49,18 @@ type ProjectRepository interface {
 	FindAll(status string) ([]Project, *errs.AppError)
 	ById(string) (*Project, *errs.AppError)
 	Save(project Project) (*Project, *errs.AppError)
-	SaveEnvironment(environment Environment) (*Environment, *errs.AppError)
-	FindEnvironmentBy(projectId string) ([]Environment, *errs.AppError)
+	SaveGroup(group Group) (*Group, *errs.AppError)
 }
 
-func NewProject(name string, user string, group string, repoURL string) Project {
+func NewProject(name string, projectType string, user string, group int) Project {
 	var jsonEmpty map[string]interface{}
 
 	return Project{
 		Name:       name,
+		Type:       projectType,
 		CreatedBy:  user,
+		CreatedOn:  time.Now().Format("2006-01-02 15:04:05"),
 		Group:      group,
-		RepoURL:    repoURL,
 		Attributes: jsonEmpty,
 		Activities: jsonEmpty,
 		Status:     "1",

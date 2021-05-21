@@ -1,13 +1,17 @@
 package domain
 
 import (
-	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
+	"database/sql/driver"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ferrandinand/cwh-api/dto"
-	"github.com/ferrandinand/cwh-api/errs"
+	"github.com/ferrandinand/cwh-lib/errs"
 )
 
 type AttributesUser map[string]interface{}
@@ -21,6 +25,11 @@ type User struct {
 	Email      string
 	Attributes AttributesUser
 	Status     string
+}
+
+func setUserPassword(password string) string {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(hashedPassword)
 }
 
 func (u User) statusAsText() string {
@@ -46,6 +55,23 @@ func (u User) ToDto() dto.UserResponse {
 type UserRepository interface {
 	FindAll(status string) ([]User, *errs.AppError)
 	ById(string) (*User, *errs.AppError)
+	NewUser(user User) (*User, *errs.AppError)
+	UpdateUser(userId string, user User) (*User, *errs.AppError)
+	DeleteUser(userId string) (*User, *errs.AppError)
+}
+
+func NewUser(name string, password string, role string, email string) User {
+	var jsonEmpty map[string]interface{}
+
+	return User{
+		Name:       name,
+		CreatedOn:  time.Now().Format("2006-01-02 15:04:05"),
+		Password:   password,
+		Role:       role,
+		Email:      email,
+		Attributes: jsonEmpty,
+		Status:     "1",
+	}
 }
 
 func (ua *AttributesUser) Scan(val interface{}) error {

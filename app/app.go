@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/ferrandinand/cwh-api/domain"
-	"github.com/ferrandinand/cwh-api/logger"
 	"github.com/ferrandinand/cwh-api/service"
+
+	"github.com/ferrandinand/cwh-lib/logger"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -45,8 +46,10 @@ func Start() {
 	authClient := getAuthURL()
 	userRepositoryDb := domain.NewUserRepositoryDb(dbClient)
 	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient)
+	environmentRepositoryDb := domain.NewEnvironmentRepositoryDb(dbClient)
 	ch := UserHandlers{service.NewUserService(userRepositoryDb)}
-	ah := ProjectHandler{service.NewProjectService(projectRepositoryDb)}
+	ph := ProjectHandler{service.NewProjectService(projectRepositoryDb)}
+	eh := EnvironmentHandler{service.NewEnvironmentService(environmentRepositoryDb)}
 
 	// define routes
 	router.
@@ -58,21 +61,37 @@ func Start() {
 		Methods(http.MethodGet).
 		Name("GetUser")
 	router.
-		HandleFunc("/project/new", ah.NewProject).
+		HandleFunc("/users/new", ch.NewUser).
+		Methods(http.MethodPost).
+		Name("NewUser")
+	router.
+		HandleFunc("/users/{user_id:[0-9]+}", ch.UpdateUser).
+		Methods(http.MethodPatch).
+		Name("UpdateUser")
+	router.
+		HandleFunc("/users/{user_id:[0-9]+}", ch.DeleteUser).
+		Methods(http.MethodDelete).
+		Name("DeleteUser")
+	router.
+		HandleFunc("/project/new", ph.NewProject).
 		Methods(http.MethodPost).
 		Name("NewProject")
 	router.
-		HandleFunc("/project/{project_id}", ah.GetProject).
+		HandleFunc("/project/{project_id}", ph.GetProject).
 		Methods(http.MethodGet).
 		Name("GetProject")
 	router.
-		HandleFunc("/projects/", ah.GetAllProject).
+		HandleFunc("/project/", ph.GetAllProject).
 		Methods(http.MethodGet).
 		Name("GetAllProject")
-	//router.
-	//	HandleFunc("/users/{user_id:[0-9]+}/account/{account_id:[0-9]+}", ah.MakeTransaction).
-	//	Methods(http.MethodPost).
-	//	Name("NewTransaction")
+	router.
+		HandleFunc("/project/{project_id}/environments/new", eh.NewEnvironment).
+		Methods(http.MethodPost).
+		Name("NewEnvironment")
+	router.
+		HandleFunc("/project/{project_id}/environments", eh.GetAllEnvironment).
+		Methods(http.MethodGet).
+		Name("GetAllEnvironment")
 
 	am := AuthMiddleware{domain.NewAuthRepository(authClient)}
 	router.Use(am.authorizationHandler())
@@ -96,7 +115,7 @@ func getDbClient() *sqlx.DB {
 	if err != nil {
 		panic(err)
 	}
-	// See "Important settings" section.
+	// "DB settings".
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
