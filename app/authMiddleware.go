@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/ferrandinand/cwh-api/domain"
-
 	"github.com/ferrandinand/cwh-lib/errs"
 
 	"github.com/gorilla/mux"

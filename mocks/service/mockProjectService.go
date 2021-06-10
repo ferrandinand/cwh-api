@@ -5,6 +5,7 @@
 package service
 
 import (
+	"fmt"
 	reflect "reflect"
 
 	dto "github.com/ferrandinand/cwh-api/dto"
@@ -36,18 +37,20 @@ func (m *MockProjectService) EXPECT() *MockProjectServiceMockRecorder {
 }
 
 // GetAllProject mocks base method.
-func (m *MockProjectService) GetAllProject(arg0 string) ([]dto.ProjectResponse, *errs.AppError) {
+func (m *MockProjectService) GetAllProject(arg0 string, arg1 int) (dto.ProjectResponseList, *errs.AppError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllProject", arg0)
-	ret0, _ := ret[0].([]dto.ProjectResponse)
+	ret := m.ctrl.Call(m, "GetAllProject", arg0, arg1)
+	fmt.Println("pedo2")
+	ret0, _ := ret[0].(dto.ProjectResponseList)
 	ret1, _ := ret[1].(*errs.AppError)
 	return ret0, ret1
 }
 
 // GetAllProject indicates an expected call of GetAllProject.
-func (mr *MockProjectServiceMockRecorder) GetAllProject(arg0 interface{}) *gomock.Call {
+func (mr *MockProjectServiceMockRecorder) GetAllProject(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllProject", reflect.TypeOf((*MockProjectService)(nil).GetAllProject), arg0)
+	fmt.Println("pedo")
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllProject", reflect.TypeOf((*MockProjectService)(nil).GetAllProject), arg0, arg1)
 }
 
 // GetProject mocks base method.

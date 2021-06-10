@@ -47,9 +47,11 @@ func Start() {
 	userRepositoryDb := domain.NewUserRepositoryDb(dbClient)
 	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient)
 	environmentRepositoryDb := domain.NewEnvironmentRepositoryDb(dbClient)
+	serviceOrderRepositoryDb := domain.NewServiceOrderRepositoryDb(dbClient)
 	ch := UserHandlers{service.NewUserService(userRepositoryDb)}
 	ph := ProjectHandler{service.NewProjectService(projectRepositoryDb)}
 	eh := EnvironmentHandler{service.NewEnvironmentService(environmentRepositoryDb)}
+	sh := ServiceOrderHandler{service.NewServiceOrderService(serviceOrderRepositoryDb)}
 
 	// define routes
 	router.
@@ -60,6 +62,10 @@ func Start() {
 		HandleFunc("/users/{user_id:[0-9]+}", ch.getUser).
 		Methods(http.MethodGet).
 		Name("GetUser")
+	router.
+		HandleFunc("/user", ch.getCurrentUser).
+		Methods(http.MethodGet).
+		Name("GetCurrentUser")
 	router.
 		HandleFunc("/users/new", ch.NewUser).
 		Methods(http.MethodPost).
@@ -81,7 +87,7 @@ func Start() {
 		Methods(http.MethodGet).
 		Name("GetProject")
 	router.
-		HandleFunc("/project/", ph.GetAllProject).
+		HandleFunc("/project", ph.GetAllProject).
 		Methods(http.MethodGet).
 		Name("GetAllProject")
 	router.
@@ -92,9 +98,27 @@ func Start() {
 		HandleFunc("/project/{project_id}/environments", eh.GetAllEnvironment).
 		Methods(http.MethodGet).
 		Name("GetAllEnvironment")
+	router.
+		HandleFunc("/project/{project_id:[0-9]+}/environments/{environment_id:[0-9]+}/services", sh.GetEnvironmentServiceOrders).
+		Methods(http.MethodGet).
+		Name("GetEnvironmentServiceOrders")
+	router.
+		HandleFunc("/project/{project_id}/environments/{environment_id}/services/{service_order_id}", sh.GetServiceOrder).
+		Methods(http.MethodGet).
+		Name("GetServiceOrder")
+	router.
+		HandleFunc("/project/{project_id:[0-9]+}/environments/{environment_id:[0-9]+}/services", sh.NewServiceOrder).
+		Methods(http.MethodPost).
+		Name("NewServiceOrder")
 
+	//User auth implementation
 	am := AuthMiddleware{domain.NewAuthRepository(authClient)}
 	router.Use(am.authorizationHandler())
+
+	//Implement pagination pageId
+	pm := PaginationMiddleware{}
+	router.Use(pm.paginationHandler())
+
 	// starting server
 	address := os.Getenv("SERVER_ADDRESS")
 	port := os.Getenv("SERVER_PORT")

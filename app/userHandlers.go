@@ -27,6 +27,17 @@ func (ch *UserHandlers) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ch *UserHandlers) getCurrentUser(w http.ResponseWriter, r *http.Request) {
+	id := r.Header.Get("User")
+
+	user, err := ch.service.GetUser(id)
+	if err != nil {
+		writeResponse(w, err.Code, err.AsMessage())
+	} else {
+		writeResponse(w, http.StatusOK, user)
+	}
+}
+
 func (ch *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["user_id"]

@@ -11,6 +11,7 @@ import (
 type UserService interface {
 	GetAllUser(string) ([]dto.UserResponse, *errs.AppError)
 	GetUser(string) (*dto.UserResponse, *errs.AppError)
+	GetUserByUsername(string) (*dto.UserResponse, *errs.AppError)
 	NewUser(request dto.NewUserRequest) (*dto.UserResponse, *errs.AppError)
 	UpdateUser(userId string, request dto.UserRequest) (*dto.UserResponse, *errs.AppError)
 	DeleteUser(userId string) (*dto.UserResponse, *errs.AppError)
@@ -48,13 +49,23 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 	return &response, nil
 }
 
+func (s DefaultUserService) GetUserByUsername(username string) (*dto.UserResponse, *errs.AppError) {
+
+	c, err := s.repo.ByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	response := c.ToDto()
+	return &response, nil
+}
+
 func (s DefaultUserService) NewUser(req dto.NewUserRequest) (*dto.UserResponse, *errs.AppError) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
 
 	//New user
-	user := domain.NewUser(req.Name, req.Password, req.Role, req.Email)
+	user := domain.NewUser(req.Name, req.LastName, req.Password, req.Role, req.Email)
 	newUser, err := s.repo.NewUser(user)
 	if err != nil {
 		return nil, err
@@ -69,7 +80,7 @@ func (s DefaultUserService) UpdateUser(userId string, req dto.UserRequest) (*dto
 	}
 
 	//New user
-	user := domain.NewUser(req.Name, "", req.Role, req.Email)
+	user := domain.NewUser(req.Name, req.LastName, "", req.Role, req.Email)
 	updateUser, err := s.repo.UpdateUser(userId, user)
 	if err != nil {
 		return nil, err

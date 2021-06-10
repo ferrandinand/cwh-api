@@ -3,6 +3,7 @@ package domain
 import (
 	"database/sql"
 	"encoding/json"
+	"strconv"
 
 	"github.com/ferrandinand/cwh-lib/errs"
 	"github.com/ferrandinand/cwh-lib/logger"
@@ -14,21 +15,25 @@ type ProjectRepositoryDb struct {
 	client *sqlx.DB
 }
 
-func (d ProjectRepositoryDb) FindAll(status string) ([]Project, *errs.AppError) {
+func (d ProjectRepositoryDb) FindAll(status string, pageId int) (ProjectList, *errs.AppError) {
 	var err error
-	projects := make([]Project, 0)
+	var projects ProjectList
 
 	if status == "" {
-		findAllSql := "select project_id, name, created_by, p.group, p.attributes,activities,status from projects p"
-		err = d.client.Select(&projects, findAllSql)
+		findAllSql := "select project_id, name, created_by, p.group, p.attributes,activities,status FROM projects p WHERE project_id > ? ORDER BY project_id LIMIT ?"
+		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), pageSize+1)
 	} else {
-		findAllSql := "select project_id, name, created_by, p.group,p.attributes,activities,status from projects p where status = ?"
-		err = d.client.Select(&projects, findAllSql, status)
+		findAllSql := "select project_id, name, created_by, p.group,p.attributes,activities,status FROM projects p WHERE p.project_id > ? AND status = ? ORDER BY project_id LIMIT ?"
+		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), status, pageSize+1)
 	}
-
 	if err != nil {
 		logger.Error("Error while querying projects table " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
+		return projects, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	if len(projects.Items) == pageSize+1 {
+		projects.NextPageID = projects.Items[len(projects.Items)-1].Id
+		projects.Items = projects.Items[:pageSize]
 	}
 
 	return projects, nil
@@ -74,9 +79,6 @@ func (d ProjectRepositoryDb) ById(id string) (*Project, *errs.AppError) {
 	return &p, nil
 }
 
-/**
- * environment = make an entry in the environment table + update the balance in the projects table
- */
 func (d ProjectRepositoryDb) SaveEnvironment(e Environment) (*Environment, *errs.AppError) {
 	// inserting new env
 	_, err := d.client.Exec(`INSERT INTO environments (name, project, atrributes) values (?, ?, ?)`, e.Name, e.Project, e.Attributes)

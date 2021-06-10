@@ -36,18 +36,18 @@ func (m *MockEnvironmentService) EXPECT() *MockEnvironmentServiceMockRecorder {
 }
 
 // GetAllEnvironment mocks base method.
-func (m *MockEnvironmentService) GetAllEnvironment(arg0 int, arg1 string) ([]dto.EnvironmentResponse, *errs.AppError) {
+func (m *MockEnvironmentService) GetAllEnvironment(arg0 int, arg1 string, arg2 int) (dto.EnvironmentResponseList, *errs.AppError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllEnvironment", arg0, arg1)
-	ret0, _ := ret[0].([]dto.EnvironmentResponse)
+	ret := m.ctrl.Call(m, "GetAllEnvironment", arg0, arg1, arg2)
+	ret0, _ := ret[0].(dto.EnvironmentResponseList)
 	ret1, _ := ret[1].(*errs.AppError)
 	return ret0, ret1
 }
 
 // GetAllEnvironment indicates an expected call of GetAllEnvironment.
-func (mr *MockEnvironmentServiceMockRecorder) GetAllEnvironment(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockEnvironmentServiceMockRecorder) GetAllEnvironment(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEnvironment", reflect.TypeOf((*MockEnvironmentService)(nil).GetAllEnvironment), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEnvironment", reflect.TypeOf((*MockEnvironmentService)(nil).GetAllEnvironment), arg0, arg1, arg2)
 }
 
 // GetEnvironment mocks base method.

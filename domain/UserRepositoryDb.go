@@ -19,7 +19,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	var err error
 	users := make([]User, 0)
 
-	findAllSql := "select user_id, name,created_on, role, email, attributes, status from users where status = 1"
+	findAllSql := "select user_id, name, last_name, created_on, role, email, attributes, status from users where status = 1"
 	err = d.client.Select(&users, findAllSql)
 	if err != nil {
 		logger.Error("Error while querying users table " + err.Error())
@@ -30,7 +30,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 }
 
 func (d UserRepositoryDb) ById(userId string) (*User, *errs.AppError) {
-	userSql := "SELECT user_id, name,created_on, role, email, attributes,status from users WHERE user_id = ? AND status=1"
+	userSql := "SELECT user_id, name,last_name, created_on, role, email, attributes,status from users WHERE user_id = ? AND status=1"
 
 	var c User
 	err := d.client.Get(&c, userSql, userId)
@@ -45,9 +45,25 @@ func (d UserRepositoryDb) ById(userId string) (*User, *errs.AppError) {
 	return &c, nil
 }
 
+func (d UserRepositoryDb) ByUsername(username string) (*User, *errs.AppError) {
+	userSql := "SELECT user_id, name,last_name, created_on, role, email, attributes,status from users WHERE name = ? AND status=1"
+
+	var c User
+	err := d.client.Get(&c, userSql, username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.NewNotFoundError("User not found")
+		} else {
+			logger.Error("Error while scanning user " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+	return &c, nil
+}
+
 func (d UserRepositoryDb) NewUser(u User) (*User, *errs.AppError) {
 
-	sqlInsert := "INSERT INTO users (name, password, created_on,role,email, attributes, status) values (?, ?, ?, ?, ?, ?, 1)"
+	sqlInsert := "INSERT INTO users (name, last_name, password, created_on, role, email, attributes, status) values (?, ?, ?, ?, ?, ?, ?, 1)"
 
 	cyptedPass := setUserPassword(u.Password)
 	attributes_json, err := json.Marshal(u.Attributes)
@@ -56,7 +72,7 @@ func (d UserRepositoryDb) NewUser(u User) (*User, *errs.AppError) {
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
 	}
 
-	_, err = d.client.Exec(sqlInsert, u.Name, cyptedPass, u.CreatedOn, u.Role, u.Email, attributes_json, u.Status)
+	_, err = d.client.Exec(sqlInsert, u.Name, u.LastName, cyptedPass, u.CreatedOn, u.Role, u.Email, attributes_json)
 	if err != nil {
 		logger.Error("Error while creating new user: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
@@ -66,7 +82,7 @@ func (d UserRepositoryDb) NewUser(u User) (*User, *errs.AppError) {
 
 func (d UserRepositoryDb) UpdateUser(userId string, u User) (*User, *errs.AppError) {
 
-	sqlUpdate := "UPDATE users SET name=?, role=?, email=?, attributes=?, status=? WHERE user_id=? AND status=1"
+	sqlUpdate := "UPDATE users SET name=?, last_name=?, role=?, email=?, attributes=?, status=? WHERE user_id=? AND status=1"
 
 	attributes_json, err := json.Marshal(u.Attributes)
 	if err != nil {
@@ -74,7 +90,7 @@ func (d UserRepositoryDb) UpdateUser(userId string, u User) (*User, *errs.AppErr
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
 	}
 
-	_, err = d.client.Exec(sqlUpdate, u.Name, u.Role, u.Email, attributes_json, u.Status, userId)
+	_, err = d.client.Exec(sqlUpdate, u.Name, u.LastName, u.Role, u.Email, attributes_json, u.Status, userId)
 	if err != nil {
 		logger.Error("Error while updating user: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
@@ -86,7 +102,7 @@ func (d UserRepositoryDb) UpdateUser(userId string, u User) (*User, *errs.AppErr
 
 func (d UserRepositoryDb) DeleteUser(userId string) (*User, *errs.AppError) {
 
-	userSql := "select user_id, name,created_on, role, email, attributes,status from users where user_id = ?"
+	userSql := "select user_id, name, last_name, created_on, role, email, attributes,status from users where user_id = ?"
 
 	var u User
 	err := d.client.Get(&u, userSql, userId)

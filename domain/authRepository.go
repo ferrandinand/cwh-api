@@ -26,7 +26,8 @@ func (r RemoteAuthRepository) IsAuthorized(token string, routeName string, vars 
 	u := buildVerifyURL(r.URL, token, routeName, vars)
 
 	if response, err := http.Get(u); err != nil {
-		fmt.Println("Error while sending..." + err.Error())
+		fmt.Println("" + err.Error())
+		logger.Error("Error while sending request to auth server:" + err.Error())
 		return "", false
 	} else {
 		m := AuthReponse{}

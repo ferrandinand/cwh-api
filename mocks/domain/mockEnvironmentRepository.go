@@ -51,18 +51,18 @@ func (mr *MockEnvironmentRepositoryMockRecorder) ById(arg0 interface{}) *gomock.
 }
 
 // FindAll mocks base method.
-func (m *MockEnvironmentRepository) FindAll(arg0 int, arg1 string) ([]domain.Environment, *errs.AppError) {
+func (m *MockEnvironmentRepository) FindAll(arg0 int, arg1 string, arg2 int) (domain.EnvironmentList, *errs.AppError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAll", arg0, arg1)
-	ret0, _ := ret[0].([]domain.Environment)
+	ret := m.ctrl.Call(m, "FindAll", arg0, arg1, arg2)
+	ret0, _ := ret[0].(domain.EnvironmentList)
 	ret1, _ := ret[1].(*errs.AppError)
 	return ret0, ret1
 }
 
 // FindAll indicates an expected call of FindAll.
-func (mr *MockEnvironmentRepositoryMockRecorder) FindAll(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockEnvironmentRepositoryMockRecorder) FindAll(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockEnvironmentRepository)(nil).FindAll), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockEnvironmentRepository)(nil).FindAll), arg0, arg1, arg2)
 }
 
 // Save mocks base method.

@@ -19,6 +19,7 @@ type AttributesUser map[string]interface{}
 type User struct {
 	Id         string `db:"user_id"`
 	Name       string
+	LastName   string `db:"last_name"`
 	Password   string
 	CreatedOn  string `db:"created_on"`
 	Role       string
@@ -44,6 +45,7 @@ func (u User) ToDto() dto.UserResponse {
 	return dto.UserResponse{
 		Id:         u.Id,
 		Name:       u.Name,
+		LastName:   u.LastName,
 		CreatedOn:  u.CreatedOn,
 		Role:       u.Role,
 		Email:      u.Email,
@@ -55,16 +57,18 @@ func (u User) ToDto() dto.UserResponse {
 type UserRepository interface {
 	FindAll(status string) ([]User, *errs.AppError)
 	ById(string) (*User, *errs.AppError)
+	ByUsername(string) (*User, *errs.AppError)
 	NewUser(user User) (*User, *errs.AppError)
 	UpdateUser(userId string, user User) (*User, *errs.AppError)
 	DeleteUser(userId string) (*User, *errs.AppError)
 }
 
-func NewUser(name string, password string, role string, email string) User {
+func NewUser(name string, lastName string, password string, role string, email string) User {
 	var jsonEmpty map[string]interface{}
 
 	return User{
 		Name:       name,
+		LastName:   lastName,
 		CreatedOn:  time.Now().Format("2006-01-02 15:04:05"),
 		Password:   password,
 		Role:       role,

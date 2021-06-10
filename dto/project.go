@@ -8,10 +8,27 @@ const BASIC = "basic"
 const ADVANCED = "advanced"
 
 type NewProjectRequest struct {
-	Name      string
-	Type      string
-	CreatedBy string
-	Group     int
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	CreatedBy string `json:"created_by"`
+	Group     int    `json:"group"`
+}
+
+type ProjectResponse struct {
+	Id         int                    `json:"id"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"`
+	CreatedBy  string                 `json:"created_by"`
+	CreatedOn  string                 `json:"created_on"`
+	Group      int                    `json:"group"`
+	Attributes map[string]interface{} `json:"attributes"`
+	Activities map[string]interface{} `json:"activities"`
+	Status     string                 `json:"status"`
+}
+
+type ProjectResponseList struct {
+	Items      []ProjectResponse `json:"items"`
+	NextPageID int               `json:"next_page_id,omitempty" example:"10"`
 }
 
 func (r NewProjectRequest) IsProjectTypeBasic() bool {
@@ -31,16 +48,4 @@ func (r NewProjectRequest) Validate() *errs.AppError {
 		return errs.NewValidationError("Mandatory fields project name cannot be empty")
 	}
 	return nil
-}
-
-type ProjectResponse struct {
-	Id         string
-	Name       string
-	Type       string
-	CreatedBy  string
-	CreatedOn  string
-	Group      int
-	Attributes map[string]interface{}
-	Activities map[string]interface{}
-	Status     string
 }

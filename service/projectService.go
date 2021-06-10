@@ -10,7 +10,7 @@ import (
 //go:generate mockgen -destination=../mocks/domain/mockProjectRepository.go -package=domain github.com/ferrandinand/cwh-api/domain ProjectRepository
 type ProjectService interface {
 	NewProject(request dto.NewProjectRequest) (*dto.ProjectResponse, *errs.AppError)
-	GetAllProject(string) ([]dto.ProjectResponse, *errs.AppError)
+	GetAllProject(status string, pageId int) (dto.ProjectResponseList, *errs.AppError)
 	GetProject(string) (*dto.ProjectResponse, *errs.AppError)
 }
 
@@ -33,7 +33,9 @@ func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.Proje
 	return &response, nil
 }
 
-func (s DefaultProjectService) GetAllProject(status string) ([]dto.ProjectResponse, *errs.AppError) {
+func (s DefaultProjectService) GetAllProject(status string, pageId int) (dto.ProjectResponseList, *errs.AppError) {
+	var response dto.ProjectResponseList
+
 	if status == "active" {
 		status = "1"
 	} else if status == "inactive" {
@@ -41,14 +43,19 @@ func (s DefaultProjectService) GetAllProject(status string) ([]dto.ProjectRespon
 	} else {
 		status = "1"
 	}
-	projects, err := s.repo.FindAll(status)
+	projects, err := s.repo.FindAll(status, pageId)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
-	response := make([]dto.ProjectResponse, 0)
-	for _, c := range projects {
-		response = append(response, c.ToDto())
+
+	projectResponseItems := make([]dto.ProjectResponse, 0)
+	for _, c := range projects.Items {
+		projectResponseItems = append(projectResponseItems, c.ToDto())
 	}
+
+	response.NextPageID = projects.NextPageID
+	response.Items = projectResponseItems
+
 	return response, err
 }
 

@@ -50,7 +50,7 @@ func Test_should_return_projects_with_status_code_200(t *testing.T) {
 		{4, "test90909", 2, "2021-03-30 12:56:06", "active", jsonMock},
 	}
 
-	mockEnvService.EXPECT().GetAllEnvironment(1, "").Return(dummyEnvironments, nil)
+	mockEnvService.EXPECT().GetAllEnvironment(1, "", 1).Return(dummyEnvironments, nil)
 	request, _ := http.NewRequest(http.MethodGet, "/project/1/environments", body)
 
 	// Act
@@ -73,7 +73,7 @@ func Test_should_return_status_code_500_with_error_message(t *testing.T) {
 	var body io.Reader
 	body = strings.NewReader("{\"status\":\"active\"}")
 
-	mockEnvService.EXPECT().GetAllEnvironment(1, "").Return(nil, errs.NewUnexpectedError("some database error"))
+	mockEnvService.EXPECT().GetAllEnvironment(1, "", 1).Return(nil, errs.NewUnexpectedError("some database error"))
 	request, _ := http.NewRequest(http.MethodGet, "/project/1/environments", body)
 
 	// Act

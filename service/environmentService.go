@@ -11,7 +11,7 @@ import (
 type EnvironmentService interface {
 	NewEnvironment(request dto.NewEnvironmentRequest) (*dto.EnvironmentResponse, *errs.AppError)
 	GetEnvironment(string) (*dto.EnvironmentResponse, *errs.AppError)
-	GetAllEnvironment(int, string) ([]dto.EnvironmentResponse, *errs.AppError)
+	GetAllEnvironment(projectId int, status string, pageId int) (dto.EnvironmentResponseList, *errs.AppError)
 }
 
 type DefaultEnvironmentService struct {
@@ -33,7 +33,9 @@ func (s DefaultEnvironmentService) NewEnvironment(req dto.NewEnvironmentRequest)
 	return &response, nil
 }
 
-func (s DefaultEnvironmentService) GetAllEnvironment(project int, status string) ([]dto.EnvironmentResponse, *errs.AppError) {
+func (s DefaultEnvironmentService) GetAllEnvironment(project int, status string, pageId int) (dto.EnvironmentResponseList, *errs.AppError) {
+	var response dto.EnvironmentResponseList
+
 	if status == "active" {
 		status = "1"
 	} else if status == "inactive" {
@@ -41,14 +43,20 @@ func (s DefaultEnvironmentService) GetAllEnvironment(project int, status string)
 	} else {
 		status = "1"
 	}
-	environments, err := s.repo.FindAll(project, status)
+
+	environments, err := s.repo.FindAll(project, status, pageId)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
-	response := make([]dto.EnvironmentResponse, 0)
-	for _, c := range environments {
-		response = append(response, c.ToDto())
+
+	environmentResponseItems := make([]dto.EnvironmentResponse, 0)
+	for _, c := range environments.Items {
+		environmentResponseItems = append(environmentResponseItems, c.ToDto())
 	}
+
+	response.NextPageID = environments.NextPageID
+	response.Items = environmentResponseItems
+
 	return response, err
 }
 

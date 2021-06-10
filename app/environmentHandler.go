@@ -54,12 +54,16 @@ func (h EnvironmentHandler) GetAllEnvironment(w http.ResponseWriter, r *http.Req
 	status := r.URL.Query().Get("status")
 	vars := mux.Vars(r)
 	projectId := vars["project_id"]
+
+	//Get pageID from the context
+	pageID := r.Context().Value("page_id")
+
 	t, _ := strconv.Atoi(projectId)
 
-	users, err := h.service.GetAllEnvironment(t, status)
+	environments, err := h.service.GetAllEnvironment(t, status, pageID.(int))
 	if err != nil {
 		writeResponse(w, err.Code, err.AsMessage())
 	} else {
-		writeResponse(w, http.StatusOK, users)
+		writeResponse(w, http.StatusOK, environments)
 	}
 }

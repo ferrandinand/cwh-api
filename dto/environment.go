@@ -18,6 +18,11 @@ type EnvironmentResponse struct {
 	Attributes    map[string]interface{}
 }
 
+type EnvironmentResponseList struct {
+	Items      []EnvironmentResponse `json:"items"`
+	NextPageID int                   `json:"next_page_id,omitempty" example:"10"`
+}
+
 func (r NewEnvironmentRequest) NameIsNull() bool {
 	if r.Name == "" {
 		return true

@@ -12,7 +12,7 @@ import (
 )
 
 type Project struct {
-	Id         string `db:"project_id"`
+	Id         int `db:"project_id"`
 	Name       string
 	Type       string
 	CreatedBy  string `db:"created_by"`
@@ -21,6 +21,11 @@ type Project struct {
 	Attributes JSONField
 	Activities JSONField `db:"activities"`
 	Status     string
+}
+
+type ProjectList struct {
+	Items      []Project `json:"items"`
+	NextPageID int       `json:"next_page_id,omitempty" example:"10"`
 }
 
 func (p Project) statusAsText() string {
@@ -46,7 +51,7 @@ func (p Project) ToDto() dto.ProjectResponse {
 }
 
 type ProjectRepository interface {
-	FindAll(status string) ([]Project, *errs.AppError)
+	FindAll(status string, pageId int) (ProjectList, *errs.AppError)
 	ById(string) (*Project, *errs.AppError)
 	Save(project Project) (*Project, *errs.AppError)
 	SaveGroup(group Group) (*Group, *errs.AppError)

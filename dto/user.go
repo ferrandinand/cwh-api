@@ -3,17 +3,19 @@ package dto
 import "github.com/ferrandinand/cwh-lib/errs"
 
 type UserResponse struct {
-	Id         string
-	Name       string
-	CreatedOn  string
-	Role       string
-	Email      string
-	Attributes map[string]interface{}
-	Status     string
+	Id         string                 `json:"id"`
+	Name       string                 `json:"name"`
+	LastName   string                 `json:"last_name"`
+	CreatedOn  string                 `json:"created_on"`
+	Role       string                 `json:"role"`
+	Email      string                 `json:"email"`
+	Attributes map[string]interface{} `json:"attributes"`
+	Status     string                 `json:"status"`
 }
 
 type UserRequest struct {
 	Name       string
+	LastName   string
 	Role       string
 	Email      string
 	Attributes map[string]interface{}
@@ -22,6 +24,7 @@ type UserRequest struct {
 
 type NewUserRequest struct {
 	Name       string
+	LastName   string
 	Password   string
 	Role       string
 	Email      string

@@ -16,8 +16,13 @@ type Environment struct {
 	Attributes    JSONField
 }
 
+type EnvironmentList struct {
+	Items      []Environment `json:"items"`
+	NextPageID int           `json:"next_page_id,omitempty" example:"10"`
+}
+
 type EnvironmentRepository interface {
-	FindAll(project int, status string) ([]Environment, *errs.AppError)
+	FindAll(project int, status string, pageId int) (EnvironmentList, *errs.AppError)
 	ById(string) (*Environment, *errs.AppError)
 	Save(environment Environment) (*Environment, *errs.AppError)
 }

@@ -12,16 +12,22 @@ type EnvironmentRepositoryDb struct {
 	client *sqlx.DB
 }
 
-func (d EnvironmentRepositoryDb) FindAll(projecId int, status string) ([]Environment, *errs.AppError) {
-	environments := make([]Environment, 0)
+func (d EnvironmentRepositoryDb) FindAll(projecId int, status string, pageId int) (EnvironmentList, *errs.AppError) {
+	var environments EnvironmentList
 
-	sqlGetProject := "SELECT environment_id, name, project, created_on, attributes from environments where project = ? AND status = ?"
+	sqlGetEnvironment := "SELECT environment_id, name, project, created_on, attributes from environments where project = ? AND environment_id > ? AND status = ? ORDER BY environment_id LIMIT ?"
 
-	err := d.client.Select(&environments, sqlGetProject, projecId, status)
+	err := d.client.Select(&environments.Items, sqlGetEnvironment, projecId, pageId, status, pageSize+1)
 	if err != nil {
 		logger.Error("Error while fetching environments information: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
+		return environments, errs.NewUnexpectedError("Unexpected database error")
 	}
+
+	if len(environments.Items) == pageSize+1 {
+		environments.NextPageID = environments.Items[len(environments.Items)-1].EnvironmentId
+		environments.Items = environments.Items[:pageSize]
+	}
+
 	return environments, nil
 }
 
