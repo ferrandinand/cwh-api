@@ -9,10 +9,12 @@ import (
 	"github.com/ferrandinand/cwh-lib/logger"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/streadway/amqp"
 )
 
 type ProjectRepositoryDb struct {
-	client *sqlx.DB
+	client         *sqlx.DB
+	rabbitmqClient *amqp.Connection
 }
 
 func (d ProjectRepositoryDb) FindAll(status string, pageId int) (ProjectList, *errs.AppError) {
@@ -72,7 +74,7 @@ func (d ProjectRepositoryDb) ById(id string) (*Project, *errs.AppError) {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Project not found")
 		} else {
-			logger.Error("Error while scanning user " + err.Error())
+			logger.Error("Error while scanning project " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
 	}
@@ -103,6 +105,79 @@ func (d ProjectRepositoryDb) FindEnvironmentBy(project_id string) ([]Environment
 	return environments, nil
 }
 
-func NewProjectRepositoryDb(dbClient *sqlx.DB) ProjectRepositoryDb {
-	return ProjectRepositoryDb{dbClient}
+func (d ProjectRepositoryDb) DeleteProject(projectId string) (*Project, *errs.AppError) {
+
+	projectSql := "select project_id, name, created_by, `group`, attributes,activities, status from projects where project_id = ?"
+
+	var p Project
+	err := d.client.Get(&p, projectSql, projectId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.NewNotFoundError("Project not found")
+		} else {
+			logger.Error("Error while scanning project " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+
+	sqlUpdate := "UPDATE projects SET status=0 WHERE project_id=?"
+	_, err = d.client.Exec(sqlUpdate, projectId)
+	if err != nil {
+		logger.Error("Error while deleting project: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected error from database")
+	}
+
+	return &p, nil
+}
+
+func (d ProjectRepositoryDb) PublishProject(project Project) *errs.AppError {
+
+	channel, err := d.rabbitmqClient.Channel()
+	if err != nil {
+		logger.Error("Error while creating rabbit mqchannel: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected error.")
+	}
+
+	_, err = channel.QueueDeclare(
+		project.Type, // queue name
+		true,         // durable
+		false,        // auto delete
+		false,        // exclusive
+		false,        // no wait
+		nil,          // arguments
+	)
+	if err != nil {
+		logger.Error("Error while declaring queue: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected error.")
+	}
+
+	projectJSON, err := json.Marshal(project)
+	if err != nil {
+		logger.Error("Error while Marshalling project to json: " + err.Error())
+	}
+	// Create a message to publish.
+	message := amqp.Publishing{
+		ContentType: "application/json",
+		Body:        []byte(projectJSON),
+	}
+
+	// Attempt to publish a message to the queue.
+	if err := channel.Publish(
+		"",           // exchange
+		project.Type, // queue name
+		false,        // mandatory
+		false,        // immediate
+		message,      // message to publish
+	); err != nil {
+		logger.Error("Error while publishing in queue: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected error.")
+	}
+	logger.Info(project.Name)
+
+	return nil
+
+}
+
+func NewProjectRepositoryDb(dbClient *sqlx.DB, rabbitmqClient *amqp.Connection) ProjectRepositoryDb {
+	return ProjectRepositoryDb{dbClient, rabbitmqClient}
 }

@@ -41,6 +41,18 @@ func (h ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["project_id"]
+
+	project, appError := h.service.DeleteProject(projectId)
+	if appError != nil {
+		writeResponse(w, appError.Code, appError.AsMessage())
+	} else {
+		writeResponse(w, http.StatusCreated, project)
+	}
+}
+
 func (h ProjectHandler) GetAllProject(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	//Get pageID from the context created in the pagination

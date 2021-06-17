@@ -12,8 +12,10 @@ import (
 
 	"github.com/ferrandinand/cwh-lib/logger"
 
+	"github.com/giantswarm/backoff"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/streadway/amqp"
 )
 
 func sanityCheck() {
@@ -27,6 +29,10 @@ func sanityCheck() {
 		"DB_ADDR",
 		"DB_PORT",
 		"DB_NAME",
+		"AMQP_SERVER_URL",
+		"AMQP_USER",
+		"AMQP_PASSWD",
+		"AMQP_PORT",
 	}
 	for _, k := range envProps {
 		if os.Getenv(k) == "" {
@@ -44,8 +50,17 @@ func Start() {
 	//wiring
 	dbClient := getDbClient()
 	authClient := getAuthURL()
+
+	ampqClient, err := getPubSubClient()
+	ampqChannel, _ := ampqClient.Channel()
+	defer ampqChannel.Close()
+	defer ampqClient.Close()
+	if err != nil {
+		panic(err)
+	}
+
 	userRepositoryDb := domain.NewUserRepositoryDb(dbClient)
-	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient)
+	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient, ampqClient)
 	environmentRepositoryDb := domain.NewEnvironmentRepositoryDb(dbClient)
 	serviceOrderRepositoryDb := domain.NewServiceOrderRepositoryDb(dbClient)
 	ch := UserHandlers{service.NewUserService(userRepositoryDb)}
@@ -82,6 +97,10 @@ func Start() {
 		HandleFunc("/project/new", ph.NewProject).
 		Methods(http.MethodPost).
 		Name("NewProject")
+	router.
+		HandleFunc("/project/{project_id:[0-9]+}", ph.DeleteProject).
+		Methods(http.MethodDelete).
+		Name("DeleteProject")
 	router.
 		HandleFunc("/project/{project_id}", ph.GetProject).
 		Methods(http.MethodGet).
@@ -139,11 +158,51 @@ func getDbClient() *sqlx.DB {
 	if err != nil {
 		panic(err)
 	}
+
 	// "DB settings".
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
 	return client
+}
+
+func getPubSubClient() (*amqp.Connection, error) {
+	amqpHost := os.Getenv("AMQP_SERVER_URL")
+	amqpUser := os.Getenv("AMQP_USER")
+	ampqPasswd := os.Getenv("AMQP_PASSWD")
+	ampqPort := os.Getenv("AMQP_PORT")
+	dataSource := fmt.Sprintf("amqp://%s:%s@%s:%s/", amqpUser, ampqPasswd, amqpHost, ampqPort)
+
+	var c *amqp.Connection
+	b := backoff.NewMaxRetries(6, 10*time.Second)
+	o := func() error {
+		client, err := amqp.Dial(dataSource)
+		if err != nil {
+			logger.Error("Error while connecting to message broker : " + dataSource + err.Error())
+			return err
+		}
+
+		// Opening a channel to our RabbitMQ
+		// instance over the connection we have already
+		// established.
+		_, err = client.Channel()
+		if err != nil {
+			logger.Error("Error while connecting to message broker : " + dataSource + err.Error())
+			return err
+
+		}
+		c = client
+
+		return nil
+
+	}
+	err := backoff.Retry(o, b)
+	if err != nil {
+		logger.Error("Error while connecting to message broker : " + dataSource + err.Error())
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func getAuthURL() string {

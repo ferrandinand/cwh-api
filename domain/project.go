@@ -55,6 +55,8 @@ type ProjectRepository interface {
 	ById(string) (*Project, *errs.AppError)
 	Save(project Project) (*Project, *errs.AppError)
 	SaveGroup(group Group) (*Group, *errs.AppError)
+	DeleteProject(projectId string) (*Project, *errs.AppError)
+	PublishProject(project Project) *errs.AppError
 }
 
 func NewProject(name string, projectType string, user string, group int) Project {

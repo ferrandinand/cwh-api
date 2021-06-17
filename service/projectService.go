@@ -12,6 +12,7 @@ type ProjectService interface {
 	NewProject(request dto.NewProjectRequest) (*dto.ProjectResponse, *errs.AppError)
 	GetAllProject(status string, pageId int) (dto.ProjectResponseList, *errs.AppError)
 	GetProject(string) (*dto.ProjectResponse, *errs.AppError)
+	DeleteProject(projectId string) (*dto.ProjectResponse, *errs.AppError)
 }
 
 type DefaultProjectService struct {
@@ -25,6 +26,12 @@ func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.Proje
 
 	//New project
 	project := domain.NewProject(req.Name, req.Type, req.CreatedBy, req.Group)
+
+	err := s.repo.PublishProject(project)
+	if err != nil {
+		return nil, err
+	}
+
 	newProject, err := s.repo.Save(project)
 	if err != nil {
 		return nil, err
@@ -65,6 +72,16 @@ func (s DefaultProjectService) GetProject(id string) (*dto.ProjectResponse, *err
 		return nil, err
 	}
 	response := c.ToDto()
+	return &response, nil
+}
+
+func (s DefaultProjectService) DeleteProject(projectId string) (*dto.ProjectResponse, *errs.AppError) {
+	//Delete project
+	deleteProject, err := s.repo.DeleteProject(projectId)
+	if err != nil {
+		return nil, err
+	}
+	response := deleteProject.ToDto()
 	return &response, nil
 }
 
