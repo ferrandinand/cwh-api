@@ -54,12 +54,11 @@ type ProjectRepository interface {
 	FindAll(status string, pageId int) (ProjectList, *errs.AppError)
 	ById(string) (*Project, *errs.AppError)
 	Save(project Project) (*Project, *errs.AppError)
-	SaveGroup(group Group) (*Group, *errs.AppError)
 	DeleteProject(projectId string) (*Project, *errs.AppError)
 	PublishProject(project Project) *errs.AppError
 }
 
-func NewProject(name string, projectType string, user string, group int) Project {
+func NewProject(name string, projectType string, user string, group int, attributes map[string]interface{}) Project {
 	var jsonEmpty map[string]interface{}
 
 	return Project{
@@ -68,7 +67,7 @@ func NewProject(name string, projectType string, user string, group int) Project
 		CreatedBy:  user,
 		CreatedOn:  time.Now().Format("2006-01-02 15:04:05"),
 		Group:      group,
-		Attributes: jsonEmpty,
+		Attributes: attributes,
 		Activities: jsonEmpty,
 		Status:     "1",
 	}

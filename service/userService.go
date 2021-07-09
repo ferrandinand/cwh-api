@@ -50,7 +50,6 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 }
 
 func (s DefaultUserService) GetUserByUsername(username string) (*dto.UserResponse, *errs.AppError) {
-
 	c, err := s.repo.ByUsername(username)
 	if err != nil {
 		return nil, err

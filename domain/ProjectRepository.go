@@ -22,10 +22,10 @@ func (d ProjectRepositoryDb) FindAll(status string, pageId int) (ProjectList, *e
 	var projects ProjectList
 
 	if status == "" {
-		findAllSql := "select project_id, name, created_by, p.group, p.attributes,activities,status FROM projects p WHERE project_id > ? ORDER BY project_id LIMIT ?"
+		findAllSql := "select project_id, name, type, created_by, p.group, p.attributes,activities,status FROM projects p WHERE project_id > ? ORDER BY project_id LIMIT ?"
 		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), pageSize+1)
 	} else {
-		findAllSql := "select project_id, name, created_by, p.group,p.attributes,activities,status FROM projects p WHERE p.project_id > ? AND status = ? ORDER BY project_id LIMIT ?"
+		findAllSql := "select project_id, name, type, created_by, p.group, p.attributes,activities,status FROM projects p WHERE p.project_id > ? AND status = ? ORDER BY project_id LIMIT ?"
 		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), status, pageSize+1)
 	}
 	if err != nil {

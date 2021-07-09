@@ -8,10 +8,11 @@ const BASIC = "basic"
 const ADVANCED = "advanced"
 
 type NewProjectRequest struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	CreatedBy string `json:"created_by"`
-	Group     int    `json:"group"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"`
+	CreatedBy  string                 `json:"created_by"`
+	Group      int                    `json:"group"`
+	Attributes map[string]interface{} `json:"attributes"`
 }
 
 type ProjectResponse struct {

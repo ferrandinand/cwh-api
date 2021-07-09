@@ -2,10 +2,13 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ferrandinand/cwh-api/dto"
 	"github.com/ferrandinand/cwh-api/service"
+	"github.com/ferrandinand/cwh-lib/logger"
+
 	"github.com/gorilla/mux"
 )
 
@@ -27,6 +30,8 @@ func (h ProjectHandler) NewProject(w http.ResponseWriter, r *http.Request) {
 			writeResponse(w, http.StatusCreated, project)
 		}
 	}
+	logger.Error("Request " + fmt.Sprintf("%s", request))
+
 }
 
 func (h ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {

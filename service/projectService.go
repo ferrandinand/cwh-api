@@ -25,7 +25,7 @@ func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.Proje
 	}
 
 	//New project
-	project := domain.NewProject(req.Name, req.Type, req.CreatedBy, req.Group)
+	project := domain.NewProject(req.Name, req.Type, req.CreatedBy, req.Group, req.Attributes)
 
 	err := s.repo.PublishProject(project)
 	if err != nil {

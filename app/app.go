@@ -60,10 +60,12 @@ func Start() {
 	}
 
 	userRepositoryDb := domain.NewUserRepositoryDb(dbClient)
+	groupRepositoryDb := domain.NewGroupRepositoryDb(dbClient)
 	projectRepositoryDb := domain.NewProjectRepositoryDb(dbClient, ampqClient)
 	environmentRepositoryDb := domain.NewEnvironmentRepositoryDb(dbClient)
 	serviceOrderRepositoryDb := domain.NewServiceOrderRepositoryDb(dbClient)
 	ch := UserHandlers{service.NewUserService(userRepositoryDb)}
+	gh := GroupHandler{service.NewGroupService(groupRepositoryDb)}
 	ph := ProjectHandler{service.NewProjectService(projectRepositoryDb)}
 	eh := EnvironmentHandler{service.NewEnvironmentService(environmentRepositoryDb)}
 	sh := ServiceOrderHandler{service.NewServiceOrderService(serviceOrderRepositoryDb)}
@@ -93,6 +95,10 @@ func Start() {
 		HandleFunc("/users/{user_id:[0-9]+}", ch.DeleteUser).
 		Methods(http.MethodDelete).
 		Name("DeleteUser")
+	router.
+		HandleFunc("/group", gh.GetAllGroups).
+		Methods(http.MethodGet).
+		Name("GetAllGroups")
 	router.
 		HandleFunc("/project/new", ph.NewProject).
 		Methods(http.MethodPost).
