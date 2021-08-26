@@ -36,12 +36,9 @@ func (s DefaultEnvironmentService) NewEnvironment(req dto.NewEnvironmentRequest)
 func (s DefaultEnvironmentService) GetAllEnvironment(project int, status string, pageId int) (dto.EnvironmentResponseList, *errs.AppError) {
 	var response dto.EnvironmentResponseList
 
-	if status == "active" {
-		status = "1"
-	} else if status == "inactive" {
-		status = "0"
-	} else {
-		status = "1"
+	status, statusError := statusToNumber(status)
+	if statusError != nil {
+		return response, errs.NewValidationError(statusError.Error())
 	}
 
 	environments, err := s.repo.FindAll(project, status, pageId)

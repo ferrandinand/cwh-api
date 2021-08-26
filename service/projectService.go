@@ -27,29 +27,30 @@ func (s DefaultProjectService) NewProject(req dto.NewProjectRequest) (*dto.Proje
 	//New project
 	project := domain.NewProject(req.Name, req.Type, req.CreatedBy, req.Group, req.Attributes)
 
-	err := s.repo.PublishProject(project)
-	if err != nil {
-		return nil, err
-	}
-
 	newProject, err := s.repo.Save(project)
 	if err != nil {
 		return nil, err
 	}
+
+	project.Id = newProject.Id
 	response := newProject.ToDto()
+
+	err = s.repo.PublishProject(project)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response, nil
 }
 
 func (s DefaultProjectService) GetAllProject(status string, pageId int) (dto.ProjectResponseList, *errs.AppError) {
 	var response dto.ProjectResponseList
 
-	if status == "active" {
-		status = "1"
-	} else if status == "inactive" {
-		status = "0"
-	} else {
-		status = "1"
+	status, statusError := statusToNumber(status)
+	if statusError != nil {
+		return response, errs.NewValidationError(statusError.Error())
 	}
+
 	projects, err := s.repo.FindAll(status, pageId)
 	if err != nil {
 		return response, err

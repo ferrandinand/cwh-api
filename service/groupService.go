@@ -18,13 +18,11 @@ type DefaultGroupService struct {
 func (s DefaultGroupService) GetAllGroup(status string, pageId int) (dto.GroupResponseList, *errs.AppError) {
 	var response dto.GroupResponseList
 
-	if status == "active" {
-		status = "1"
-	} else if status == "inactive" {
-		status = "0"
-	} else {
-		status = "1"
+	status, statusError := statusToNumber(status)
+	if statusError != nil {
+		return response, errs.NewValidationError(statusError.Error())
 	}
+
 	groups, err := s.repo.FindAll(status, pageId)
 	if err != nil {
 		return response, err

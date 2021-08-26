@@ -16,6 +16,9 @@ func (d EnvironmentRepositoryDb) FindAll(projecId int, status string, pageId int
 	var environments EnvironmentList
 
 	sqlGetEnvironment := "SELECT environment_id, name, project, created_on, attributes from environments where project = ? AND environment_id > ? AND status = ? ORDER BY environment_id LIMIT ?"
+	if status == "" {
+		sqlGetEnvironment = "SELECT environment_id, name, project, created_on, attributes from environments where project = ? AND environment_id > ? ORDER BY environment_id LIMIT ?"
+	}
 
 	err := d.client.Select(&environments.Items, sqlGetEnvironment, projecId, pageId, status, pageSize+1)
 	if err != nil {

@@ -30,6 +30,7 @@ type ProjectResponse struct {
 type ProjectResponseList struct {
 	Items      []ProjectResponse `json:"items"`
 	NextPageID int               `json:"next_page_id,omitempty" example:"10"`
+	PrevPageID int               `json:"prev_page_id,omitempty" example:"10"`
 }
 
 func (r NewProjectRequest) IsProjectTypeBasic() bool {

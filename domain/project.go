@@ -26,14 +26,12 @@ type Project struct {
 type ProjectList struct {
 	Items      []Project `json:"items"`
 	NextPageID int       `json:"next_page_id,omitempty" example:"10"`
+	PrevPageID int       `json:"prev_page_id,omitempty" example:"10"`
 }
 
 func (p Project) statusAsText() string {
-	statusAsText := "active"
-	if p.Status == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
+	status, _ := commonStatusAsText(p.Status)
+	return status
 }
 
 func (p Project) ToDto() dto.ProjectResponse {
@@ -69,7 +67,7 @@ func NewProject(name string, projectType string, user string, group int, attribu
 		Group:      group,
 		Attributes: attributes,
 		Activities: jsonEmpty,
-		Status:     "1",
+		Status:     "1", // Creating
 	}
 }
 

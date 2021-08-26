@@ -34,11 +34,8 @@ func setUserPassword(password string) string {
 }
 
 func (u User) statusAsText() string {
-	statusAsText := "active"
-	if u.Status == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
+	status, _ := commonStatusAsText(u.Status)
+	return status
 }
 
 func (u User) ToDto() dto.UserResponse {
@@ -74,7 +71,7 @@ func NewUser(name string, lastName string, password string, role string, email s
 		Role:       role,
 		Email:      email,
 		Attributes: jsonEmpty,
-		Status:     "1",
+		Status:     "2", // Created
 	}
 }
 

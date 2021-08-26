@@ -17,11 +17,8 @@ type Group struct {
 }
 
 func (g Group) statusAsText() string {
-	statusAsText := "active"
-	if g.Status == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
+	status, _ := commonStatusAsText(g.Status)
+	return status
 }
 
 type GroupList struct {

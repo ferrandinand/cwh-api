@@ -48,7 +48,7 @@ func (d ServiceOrderRepositoryDb) Save(p ServiceOrder) (*ServiceOrder, *errs.App
 }
 
 func (d ServiceOrderRepositoryDb) ById(id string) (*ServiceOrder, *errs.AppError) {
-	serviceOrderSql := "select service_order_id, service, environment, project, created_by, status, attributes from service_orders where service_order_id = ? AND status=1"
+	serviceOrderSql := "select service_order_id, service, environment, project, created_by, status, attributes from service_orders where service_order_id = ?"
 
 	var p ServiceOrder
 	err := d.client.Get(&p, serviceOrderSql, id)

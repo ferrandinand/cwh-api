@@ -39,11 +39,8 @@ func NewEnvironment(name string, project int) Environment {
 }
 
 func (p Environment) statusAsText() string {
-	statusAsText := "active"
-	if p.Status == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
+	status, _ := commonStatusAsText(p.Status)
+	return status
 }
 
 func (t Environment) ToDto() dto.EnvironmentResponse {

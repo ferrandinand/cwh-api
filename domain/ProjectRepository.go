@@ -22,10 +22,10 @@ func (d ProjectRepositoryDb) FindAll(status string, pageId int) (ProjectList, *e
 	var projects ProjectList
 
 	if status == "" {
-		findAllSql := "select project_id, name, type, created_by, p.group, p.attributes,activities,status FROM projects p WHERE project_id > ? ORDER BY project_id LIMIT ?"
+		findAllSql := "select project_id, name, type, created_by, p.group, p.attributes,activities,status FROM projects p WHERE project_id >= ? ORDER BY project_id LIMIT ?"
 		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), pageSize+1)
 	} else {
-		findAllSql := "select project_id, name, type, created_by, p.group, p.attributes,activities,status FROM projects p WHERE p.project_id > ? AND status = ? ORDER BY project_id LIMIT ?"
+		findAllSql := "select project_id, name, type, created_by, p.group,p.attributes,activities,status FROM projects p WHERE p.project_id >= ? AND status = ? ORDER BY project_id LIMIT ?"
 		err = d.client.Select(&projects.Items, findAllSql, strconv.Itoa(pageId), status, pageSize+1)
 	}
 	if err != nil {
@@ -61,6 +61,21 @@ func (d ProjectRepositoryDb) Save(p Project) (*Project, *errs.AppError) {
 		logger.Error("Error while creating new project: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected error from database")
 	}
+
+	// Get project generated
+	sqlGetProject := "SELECT max(project_id) as project_id FROM projects p WHERE p.name=? LIMIT 1"
+
+	var np Project
+	err = d.client.Get(&np, sqlGetProject, p.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.NewNotFoundError("Project not found")
+		} else {
+			logger.Error("Error while scanning project " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+	p.Id = np.Id
 
 	return &p, nil
 }
@@ -120,6 +135,7 @@ func (d ProjectRepositoryDb) DeleteProject(projectId string) (*Project, *errs.Ap
 		}
 	}
 
+	//Disable project
 	sqlUpdate := "UPDATE projects SET status=0 WHERE project_id=?"
 	_, err = d.client.Exec(sqlUpdate, projectId)
 	if err != nil {

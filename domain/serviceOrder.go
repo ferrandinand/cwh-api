@@ -19,11 +19,8 @@ type ServiceOrder struct {
 }
 
 func (s ServiceOrder) statusAsText() string {
-	statusAsText := "active"
-	if s.Status == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
+	status, _ := commonStatusAsText(s.Status)
+	return status
 }
 
 func (s ServiceOrder) ToDto() dto.ServiceOrderResponse {
@@ -54,6 +51,6 @@ func NewServiceOrder(service string, environment string, project string, user st
 		CreatedBy:   user,
 		CreatedOn:   time.Now().Format("2006-01-02 15:04:05"),
 		Attributes:  jsonEmpty,
-		Status:      "1",
+		Status:      "2", //Created
 	}
 }

@@ -22,13 +22,12 @@ type DefaultUserService struct {
 }
 
 func (s DefaultUserService) GetAllUser(status string) ([]dto.UserResponse, *errs.AppError) {
-	if status == "active" {
-		status = "1"
-	} else if status == "inactive" {
-		status = "0"
-	} else {
-		status = ""
+
+	status, statusError := statusToNumber(status)
+	if statusError != nil {
+		return nil, errs.NewValidationError(statusError.Error())
 	}
+
 	users, err := s.repo.FindAll(status)
 	if err != nil {
 		return nil, err
