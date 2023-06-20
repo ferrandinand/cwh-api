@@ -1,13 +1,24 @@
 package domain
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 )
 
-func commonStatusAsText(status string) (string, error) {
-
-	if statusInMap, ok := statuses[status]; ok {
-		return statusInMap, nil
+func (jf *JSONField) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &jf)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &jf)
+		return nil
+	default:
+		return errors.New(fmt.Sprintf("Unsupported type: %T", v))
 	}
-	return "", fmt.Errorf("Status not found")
+}
+func (jf *JSONField) Value() (driver.Value, error) {
+	return json.Marshal(jf)
 }

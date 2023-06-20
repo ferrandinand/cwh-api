@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ferrandinand/cwh-lib/errs"
+	"bitbucket.org/iccgit/icc-cwh-backstage/cwh-api/lib/errs"
 )
 
 const (

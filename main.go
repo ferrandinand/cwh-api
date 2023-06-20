@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ferrandinand/cwh-api/app"
+	"bitbucket.org/iccgit/icc-cwh-backstage/cwh-api/app"
 )
 
 func main() {
